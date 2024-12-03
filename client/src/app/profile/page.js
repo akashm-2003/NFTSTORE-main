@@ -1,4 +1,3 @@
-"use client";
 import { WalletContext } from "@/context/wallet";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { ethers } from "ethers";
