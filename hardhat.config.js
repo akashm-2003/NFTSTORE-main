@@ -11,6 +11,10 @@ module.exports = {
     holesky:{
       url: process.env.API_URL_HOLESKY,
       accounts: [process.env.PRIVATE_KEY],
+    },
+    arbsepolia:{
+      url: process.env.API_URL_ARB_SEPOLIA,
+      accounts: [process.env.PRIVATE_KEY],
     }
   },
 };

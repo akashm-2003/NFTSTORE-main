@@ -2,7 +2,6 @@
   "_format": "hh-sol-artifact-1",
   "contractName": "NFTSTORE",
   "sourceName": "contracts/NFTSTORE.sol",
-  "address": "0xa3a2De86931d1208ac303725477CF43b13516b62", 
   "abi": [
     {
       "inputs": [],

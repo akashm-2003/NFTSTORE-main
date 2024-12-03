@@ -23,7 +23,7 @@ export default function Marketplace() {
     );
 
     let transaction = await contract.getAllListedNFTs();
-    console.log(transaction)
+    console.log("hi:",transaction)
     for (const i of transaction) {
       const tokenId = parseInt(i.tokenId);
       const tokenURI = await contract.tokenURI(tokenId);

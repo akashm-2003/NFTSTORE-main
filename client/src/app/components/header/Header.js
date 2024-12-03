@@ -31,7 +31,12 @@ export default function Header() {
       const network = await provider.getNetwork();
       const chainID = network.chainId;
       const sepoliaNetworkId = "17000";
+      const arbsepoliaNetworkId="421614"
 
+      if(chainID.toString() !== arbsepoliaNetworkId){
+        alert("Please switch your MetaMask to areb network");
+        return;
+      }
       if (chainID.toString() !== sepoliaNetworkId) {
         alert("Please switch your MetaMask to goerli network");
         return;
