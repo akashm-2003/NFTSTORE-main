@@ -1,6 +1,6 @@
 "use client";
 import { WalletContext } from "@/context/wallet";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { ethers } from "ethers";
 import MarketplaceJson from "../marketplace.json";
 import styles from "./profile.module.css";
@@ -10,59 +10,65 @@ import axios from "axios";
 import NFTTile from "../components/nftCard/NFTCard";
 
 export default function Profile() {
-  const [items, setItems] = useState();
+  const [items, setItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState("0");
   const { isConnected, userAddress, signer } = useContext(WalletContext);
 
-  async function getNFTitems() {
-    let sumPrice = 0;
-    const itemsArray = [];
-    if (!signer) return;
-    let contract = new ethers.Contract(
-      MarketplaceJson.address,
-      MarketplaceJson.abi,
-      signer
-    );
+  // Wrap getNFTitems with useCallback to avoid unnecessary re-creation
+  const getNFTitems = useCallback(async () => {
+    try {
+      if (!signer || !userAddress) return { itemsArray: [], sumPrice: 0 };
 
-    let transaction = await contract.getMyNFTs();
-    console.log("ttt",transaction);
-    for (const i of transaction) {
-      if(i[2].toLowerCase()==userAddress){
-      const tokenId = parseInt(i.tokenId);
-      const tokenURI = await contract.tokenURI(tokenId);
-      const meta = (await axios.get(tokenURI)).data;
-      const price = ethers.formatEther(i.price);
-      const item = {
-        price,
-        tokenId,
-        seller: i.seller,
-        owner: i.owner,
-        image: meta.image,
-        name: meta.name,
-        description: meta.description,
-      };
+      const itemsArray = [];
+      let sumPrice = 0;
 
-      itemsArray.push(item);
-      sumPrice += Number(price);
+      const contract = new ethers.Contract(
+        MarketplaceJson.address,
+        MarketplaceJson.abi,
+        signer
+      );
+
+      const transactions = await contract.getMyNFTs();
+      console.log("Transactions:", transactions);
+
+      for (const txn of transactions) {
+        if (txn[2].toLowerCase() === userAddress.toLowerCase()) {
+          const tokenId = parseInt(txn.tokenId);
+          const tokenURI = await contract.tokenURI(tokenId);
+          const meta = (await axios.get(tokenURI)).data;
+          const price = ethers.formatEther(txn.price);
+
+          const item = {
+            price,
+            tokenId,
+            seller: txn.seller,
+            owner: txn.owner,
+            image: meta.image,
+            name: meta.name,
+            description: meta.description,
+          };
+
+          itemsArray.push(item);
+          sumPrice += Number(price);
+        }
+      }
+      return { itemsArray, sumPrice };
+    } catch (error) {
+      console.error("Error fetching NFT items:", error);
+      return { itemsArray: [], sumPrice: 0 };
     }
-    }
-    return { itemsArray, sumPrice };
-  }
+  }, [signer, userAddress]);
 
+  // Fetch data when dependencies change
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const { itemsArray, sumPrice } = await getNFTitems();
-        setItems(itemsArray);
-        setTotalPrice(sumPrice);
-      } catch (error) {
-        console.error("Error fetching NFT items:", error);
-      }
+      const { itemsArray, sumPrice } = await getNFTitems();
+      setItems(itemsArray);
+      setTotalPrice(sumPrice);
     };
 
-    fetchData();
-  }, [isConnected]);
-
+    if (isConnected) fetchData();
+  }, [isConnected, getNFTitems]);
   return (
     <div className={styles.container}>
       <Header />
